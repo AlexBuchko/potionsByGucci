@@ -1,3 +1,4 @@
+import json
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from src.api import auth
@@ -24,6 +25,11 @@ class Barrel(BaseModel):
 def post_deliver_barrels(barrels_delivered: list[Barrel]):
     """ """
     print(barrels_delivered)
+    # printing the dict version of this for testing later down the road
+    for barrel in barrels_delivered:
+        json_string = json.dumps(barrel.__dict__)
+        print(json_string)
+
     colors = ["red", "green", "blue"]
     for barrel in barrels_delivered:
         # getting color
@@ -48,7 +54,12 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]):
 @router.post("/plan")
 def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     """ """
+
     print(wholesale_catalog)
+    # printing the dict version of this for testing later down the road
+    for barrel in wholesale_catalog:
+        json_string = json.dumps(barrel.__dict__)
+        print(json_string)
     # if we have the gold for it and we have less than so many options,
     # purchasing a small red barrel
     BARRELS_TO_BUY = {
