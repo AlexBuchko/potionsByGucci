@@ -111,7 +111,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     for color, count in purchase_plan.items():
         sku = f"SMALL_{color_to_buy.upper()}_BARREL"
         barrel = catalog[sku]
-        print(f"purchasing {count} color barrels at {barrel.price}")
+        print(f"purchasing {count} { color } barrels at {barrel.price}")
         ans.append(
             {
                 "sku": sku,
