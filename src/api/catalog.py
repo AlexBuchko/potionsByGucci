@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 import sqlalchemy
 from src.api import database as db
+from src.api import colors as colorUtils
 
 router = APIRouter()
 
@@ -30,12 +31,4 @@ def get_catalog():
                 }
             )
 
-    # Can return a max of 20 items.
-    response = {
-        "sku": "RED_POTION_0",
-        "name": "red potion",
-        "price": 50,
-        "potion_type": [100, 0, 0, 0],
-        "quantity": 1,
-    }
-    return response
+    return ans
