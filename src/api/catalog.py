@@ -14,6 +14,21 @@ def get_catalog():
     if (inventory["num_red_potions"]) <= 0:
         print("no potions to sell, returning")
         return
+    ans = []
+    colors = ["red", "green", "blue"]
+    for color in colors:
+        key = f"num_{color}_potions"
+        num_potions = inventory[key]
+        if num_potions >= 1:
+            ans.append(
+                {
+                    "sku": f"{color.upper()}_POTION_0",
+                    "name": "{color} potion",
+                    "price": 50,
+                    "potion_type": colorUtils.get_base_potion_type(color),
+                    "quantity": 1,
+                }
+            )
 
     # Can return a max of 20 items.
     response = {

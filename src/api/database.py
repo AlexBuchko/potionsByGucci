@@ -15,7 +15,7 @@ engine = create_engine(database_connection_url(), pool_pre_ping=True)
 def get_global_inventory():
     with engine.begin() as connection:
         select_statement = text(
-            "SELECT num_red_potions, num_red_ml, gold from global_inventory"
+            "SELECT num_red_potions, num_red_ml, num_green_potions, num_green_ml, num_blue_potions, num_blue_ml, gold from global_inventory"
         )
         current_inventory = connection.execute(select_statement)
         current_inventory = current_inventory.first()._asdict()
