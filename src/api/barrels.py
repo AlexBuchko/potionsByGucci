@@ -27,7 +27,7 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]):
     print(barrels_delivered)
     # printing the dict version of this for testing later down the road
     for barrel in barrels_delivered:
-        json_string = json.dumps(barrel.__dict__())
+        json_string = json.dumps(barrel.__dict__)
         print(json_string)
 
     colors = ["red", "green", "blue"]
@@ -58,7 +58,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     print(wholesale_catalog)
     # printing the dict version of this for testing later down the road
     for barrel in wholesale_catalog:
-        json_string = json.dumps(barrel.__dict__())
+        json_string = json.dumps(barrel.__dict__)
         print(json_string)
 
     BARRELS_TO_BUY = {
@@ -77,7 +77,9 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     inventory = db.get_global_inventory()
     # getting a count of how many potions we have
     colors = ["red", "green", "blue"]
-    colors = colors.filter(lambda color: f"SMALL_{color.upper()}_BARREL" in catalog)
+    colors = list(
+        filter(lambda color: f"SMALL_{color.upper()}_BARREL" in catalog, colors)
+    )
     potion_counts = {color: inventory[f"num_{color}_potions"] for color in colors}
     fluid_counts = {color: inventory[f"num_{color}_ml"] for color in colors}
 
@@ -92,13 +94,13 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
 
     while i < len(colors):
         if i == 0:  # recomputing the order when we reset
-            buying_order = colors.sort(lambda color: potion_counts[color])
+            buying_order = sorted(colors, key=lambda color: potion_counts[color])
         color_to_buy = buying_order[i]
         barrel = catalog[f"SMALL_{color_to_buy.upper()}_BARREL"]
         can_afford = gold >= barrel.price
         if can_afford:
             # adding to purchase plan
-            potion_counts += barrel.ml_per_barrel / 100
+            potion_counts[color_to_buy] += barrel.ml_per_barrel / 100
             purchase_plan[color_to_buy] = purchase_plan.get(color_to_buy, 0) + 1
             gold -= barrel.price
             i = 0
@@ -107,8 +109,9 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
 
     # getting a return value
     ans = []
+    print(purchase_plan)
     for color, count in purchase_plan.items():
-        sku = f"SMALL_{color_to_buy.upper()}_BARREL"
+        sku = f"SMALL_{color.upper()}_BARREL"
         barrel = catalog[sku]
         print(f"purchasing {count} { color } barrels at {barrel.price}")
         ans.append(
