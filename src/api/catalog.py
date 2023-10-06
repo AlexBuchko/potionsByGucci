@@ -13,6 +13,7 @@ def get_catalog():
     """
     inventory = db.get_global_inventory()
     colors = ["red", "green", "blue"]
+    ans = []
     for color in colors:
         key = f"num_{color}_potions"
         num_potions = inventory[key]
