@@ -25,7 +25,7 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory]):
         # will be only red potions for now
         inventory = db.get_global_inventory()
         cur_ml = inventory[f"num_{color}_ml"]
-        cur_potions = inventory[f"num_f{color}_potions"]
+        cur_potions = inventory[f"num_{color}_potions"]
         new_ml = cur_ml - potion.quantity * 100
         new_potions = cur_potions + potion.quantity
 

@@ -20,8 +20,8 @@ def reset():
     colors = colorUtils.colors
     update_command = "UPDATE global_inventory SET"
     for color in colors:
-        update_command += f" SET num_{color}_potions = 0, num_{color}_ml = 0"
-    update_command += "SET gold = 100"
+        update_command += f" num_{color}_potions = 0, num_{color}_ml = 0, "
+    update_command += " gold = 100"
     db.execute(update_command)
     return "OK"
 
