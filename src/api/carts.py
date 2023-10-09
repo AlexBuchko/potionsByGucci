@@ -70,7 +70,7 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
     for sku, quantity in cart.items():
         color = sku.split("_")[0].lower()
 
-        potion_count = inventory[f"num_f{color}_potions"]
+        potion_count = inventory[f"num_{color}_potions"]
 
         if quantity > potion_count:
             print(
