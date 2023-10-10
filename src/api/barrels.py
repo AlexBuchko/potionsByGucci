@@ -105,9 +105,6 @@ def one_of_each(catalog):
             if sku in catalog:
                 barrel = catalog[sku]
                 if barrel.price <= gold:
-                    potion_counts[color] = (
-                        potion_counts.get(color, 0) + barrel.ml_per_barrel
-                    )
                     gold -= barrel.price
                     purchase_plan[sku] = 1
                     break

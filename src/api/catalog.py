@@ -12,9 +12,8 @@ def get_catalog():
     Each unique item combination must have only a single price.
     """
     inventory = db.get_global_inventory()
-    colors = ["red", "green", "blue"]
     ans = []
-    for color in colors:
+    for color in colorUtils.colors:
         key = f"num_{color}_potions"
         num_potions = inventory[key]
         if num_potions >= 1:
