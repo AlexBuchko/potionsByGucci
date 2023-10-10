@@ -67,7 +67,9 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
     gold_count = inventory["gold"]
     potions_bought = 0
     gold_paid = 0
+    print(cart)
     for sku, quantity in cart.items():
+        print("iter 1", sku, quantity)
         color = sku.split("_")[0].lower()
 
         potion_count = inventory[f"num_{color}_potions"]
@@ -92,6 +94,7 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
         potions_bought += quantity
 
     update_command = f"UPDATE {TABLE_NAME} SET gold = {gold_count} WHERE id = 1"
+    db.execute(update_command)
     del carts[cart_id]
 
     return {
