@@ -59,7 +59,7 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
     """ """
     logger.info("checkout")
 
-    POTION_PRICE = 50
+    POTION_PRICE = 1
     TABLE_NAME = "global_inventory"
     cart = carts[cart_id]
     inventory = db.get_global_inventory()
