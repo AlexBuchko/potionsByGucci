@@ -21,7 +21,7 @@ def get_catalog():
                 {
                     "sku": f"{color.upper()}_POTION_0",
                     "name": "{color} potion",
-                    "price": 1,
+                    "price": 50,
                     "potion_type": colorUtils.get_base_potion_type(color),
                     "quantity": 1,
                 }

@@ -77,7 +77,7 @@ def balance_barrels(catalog):
         if can_afford:
             # adding to purchase plan
             potion_counts[color_to_buy] += barrel.ml_per_barrel / 100
-            purchase_plan[sku] = purchase_plan.get(color_to_buy, 0) + 1
+            purchase_plan[sku] = purchase_plan.get(sku, 0) + 1
             gold -= barrel.price
             i = 0
         else:
@@ -124,7 +124,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
 
     catalog = {barrel.sku: barrel for barrel in wholesale_catalog}
     ans = []
-    purchase_plan = one_of_each(catalog)
+    purchase_plan = balance_barrels(catalog)
     print(purchase_plan)
     for sku, count in purchase_plan.items():
         barrel = catalog[sku]
