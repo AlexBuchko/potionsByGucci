@@ -21,18 +21,24 @@ class PotionInventory(BaseModel):
 @router.post("/deliver")
 def post_deliver_bottles(potions_delivered: list[PotionInventory]):
     """ """
-    for potion in potions_delivered:
-        color = potionUtils.get_sku_from_potion_type(potion.potion_type)
-        # will be only red potions for now
-        inventory = db.get_gold()
-        cur_ml = inventory[f"num_{color}_ml"]
-        cur_potions = inventory[f"num_{color}_potions"]
-        new_ml = cur_ml - potion.quantity * 100
-        new_potions = cur_potions + potion.quantity
-
-        update_command = f"UPDATE global_inventory SET num_{color}_ml = {new_ml}, num_{color}_potions = {new_potions} WHERE id = 1"
-        db.execute_with_binds(update_command)
     print(potions_delivered)
+    for potion in potions_delivered:
+        # increase the number of potions by quantity
+        query = text(
+            "UPDATE potions SET quantity = quantity + :brewed WHERE potion_type = :potion_type"
+        )
+        db.execute_with_binds(
+            query, {"brewed": potion.quantity, "potion_type": potion.potion_type}
+        )
+        # decrease the number of fluids by the fluid amount
+        fluid_types = potionUtils.potion_type_to_dict(potion.potion_type)
+        for color, amount in fluid_types.items():
+            if amount == 0:
+                continue
+            query = text(
+                "UPDATE fluids SET quantity = quantity - :spent WHERE color = :color"
+            )
+            db.execute_with_binds(query, {"spent": amount, "color": color})
 
     return "OK"
 
@@ -65,6 +71,12 @@ def get_bottle_plan():
             potions[sku]["quantity"] += 1
             brewing_plan[sku] = brewing_plan.get(sku, 0) + 1
             total_potions += 1
+
+            this_potion_type = potionUtils.potion_type_to_dict(
+                potion["potion_type"]
+            ).items()
+            for color, amount in this_potion_type:
+                fluids[color] -= int(amount)
             break
         else:
             # only gets triggered if we get through the sorted order
