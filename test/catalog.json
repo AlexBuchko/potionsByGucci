@@ -26,5 +26,12 @@
     "potion_type": [0, 100, 0, 0],
     "price": 25,
     "quantity": 5
+  },
+  {
+    "sku": "LARGE_RED_BARREL",
+    "ml_per_barrel": 2000,
+    "potion_type": [100, 0, 0, 0],
+    "price": 200,
+    "quantity": 5
   }
 ]

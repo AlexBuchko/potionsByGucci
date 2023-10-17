@@ -3,7 +3,8 @@ from enum import Enum
 from pydantic import BaseModel
 from src.api import auth
 from src.api import database as db
-from src.api import colors
+from src.api import potionUtils
+from sqlalchemy import text
 
 router = APIRouter(
     prefix="/bottler",
@@ -21,16 +22,16 @@ class PotionInventory(BaseModel):
 def post_deliver_bottles(potions_delivered: list[PotionInventory]):
     """ """
     for potion in potions_delivered:
-        color = colors.get_color_from_potion_type(potion.potion_type)
+        color = potionUtils.get_sku_from_potion_type(potion.potion_type)
         # will be only red potions for now
-        inventory = db.get_global_inventory()
+        inventory = db.get_gold()
         cur_ml = inventory[f"num_{color}_ml"]
         cur_potions = inventory[f"num_{color}_potions"]
         new_ml = cur_ml - potion.quantity * 100
         new_potions = cur_potions + potion.quantity
 
         update_command = f"UPDATE global_inventory SET num_{color}_ml = {new_ml}, num_{color}_potions = {new_potions} WHERE id = 1"
-        db.execute(update_command)
+        db.execute_with_binds(update_command)
     print(potions_delivered)
 
     return "OK"
@@ -43,24 +44,33 @@ def get_bottle_plan():
     Go from barrel to bottle.
     """
 
-    # Each bottle has a quantity of what proportion of red, blue, and
-    # green potion to add.
-    # Expressed in integers from 1 to 100 that must sum up to 100.
+    # iteratively brewing the potion we have the least of and we have the ingredients for
+    # until we hit the max potions
+    MAX_POTIONS = 300
 
-    # Initial logic: bottle all barrels into red potions.
-    inventory = db.get_global_inventory()
-    ans = []
-    for color in colors.colors:
-        ml = inventory[f"num_{color}_ml"]
-        potions_to_brew = ml // 100
-        if potions_to_brew <= 0:
-            print(f"can't brew any {color} potions")
-            continue
-        ans.append(
-            {
-                "potion_type": colors.get_base_potion_type(color),
-                "quantity": potions_to_brew,
-            }
-        )
+    query = text("(SELECT sum(quantity)::int from potions)")
+    total_potions = db.execute(query).scalar_one()
+    fluids = db.get_fluid_counts()
+    potions = db.get_potions()
+    brewing_plan = {}
 
-    return ans
+    while total_potions < MAX_POTIONS:
+        brewing_order = sorted(potions.values(), key=lambda potion: potion["quantity"])
+        for potion in brewing_order:
+            can_brew = potionUtils.have_needed_fluids(fluids, potion["potion_type"])
+            if not can_brew:
+                continue
+
+            sku = potion["sku"]
+            potions[sku]["quantity"] += 1
+            brewing_plan[sku] = brewing_plan.get(sku, 0) + 1
+            total_potions += 1
+            break
+        else:
+            # only gets triggered if we get through the sorted order
+            break
+
+    return [
+        {"potion_type": potions[sku]["potion_type"], "quantity": amount}
+        for sku, amount in brewing_plan.items()
+    ]
