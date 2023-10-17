@@ -38,7 +38,9 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory]):
             query = text(
                 "UPDATE fluids SET quantity = quantity - :spent WHERE color = :color"
             )
-            db.execute_with_binds(query, {"spent": amount * quantity, "color": color})
+            db.execute_with_binds(
+                query, {"spent": amount * potion.quantity, "color": color}
+            )
 
     return "OK"
 
