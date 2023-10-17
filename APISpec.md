@@ -3,6 +3,7 @@
 ## 1. Customer Purchasing
 
 The API calls are made in this sequence when making a purchase:
+
 1. `Get Catalog`
 2. `New Cart`
 3. `Add Item to Cart` (Can be called multiple times)
@@ -42,13 +43,13 @@ Creates a new cart for a specific customer.
 
 ```json
 {
-    "cart_id": "string" /* This id will be used for future calls to add items and checkout */
+  "cart_id": "string" /* This id will be used for future calls to add items and checkout */
 }
-``` 
+```
 
 ### 1.3. Add Item to Cart - `/carts/{cart_id}/items/{item_sku}` (PUT)
 
-Updates the quantity of a specific item in a cart. 
+Updates the quantity of a specific item in a cart.
 
 **Request**:
 
@@ -62,7 +63,7 @@ Updates the quantity of a specific item in a cart.
 
 ```json
 {
-    "success": "boolean"
+  "success": "boolean"
 }
 ```
 
@@ -83,13 +84,14 @@ Handles the checkout process for a specific cart.
 
 ```json
 {
-    "success": "boolean"
+  "success": "boolean"
 }
 ```
 
 ## 2. Bottling
 
 The API calls are made in this sequence when the bottler comes:
+
 1. `Get Bottle Plan`
 2. `Deliver Bottles`
 
@@ -126,6 +128,7 @@ Posts delivery of potions.
 ## 3. Barrel Purchases
 
 The API calls are made in this sequence when Barrel Purchases can be made:
+
 1. `Get Barrel Purchase Plan`
 2. `Deliver Barrels`
 
@@ -151,10 +154,10 @@ Gets the plan for purchasing wholesale barrels.
 
 ```json
 [
-    {
-        "sku": "string", /* Must match a sku from the catalog just passed in this call */
-        "quantity": "integer" /* A number less than or equal to the quantity available for sale */
-    }
+  {
+    "sku": "string" /* Must match a sku from the catalog just passed in this call */,
+    "quantity": "integer" /* A number less than or equal to the quantity available for sale */
+  }
 ]
 ```
 
@@ -188,7 +191,7 @@ Returns the name of the shop and who the shop owner is.
 
 ```json
 {
-    "shop_name": "string",
-    "shop_owner": "string",
+  "shop_name": "string",
+  "shop_owner": "string"
 }
 ```

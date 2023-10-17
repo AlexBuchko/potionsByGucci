@@ -3,7 +3,8 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from src.api import auth
 from src.api import database as db
-from src.api import colors
+from src.api import potionUtils
+from sqlalchemy import text
 
 router = APIRouter(
     prefix="/barrels",
@@ -22,6 +23,9 @@ class Barrel(BaseModel):
     quantity: int
 
 
+sizes = ["MINI", "SMALL", "MEDIUM", "LARGE"]
+
+
 @router.post("/deliver")
 def post_deliver_barrels(barrels_delivered: list[Barrel]):
     """ """
@@ -33,71 +37,66 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]):
 
     for barrel in barrels_delivered:
         # getting color
-        color = colors.get_color_from_potion_type(barrel.potion_type)
+        color = potionUtils.get_color_from_barrel_type(barrel.potion_type)
+        gold_spent = barrel.price * barrel.quantity
+        query = text(
+            "UPDATE global_inventory SET gold = gold - :gold_spent",
+        )
+        db.execute_with_binds(query, {"gold_spent": gold_spent})
 
-        inventory = db.get_global_inventory()
-        money_spent = barrel.price * barrel.quantity
         ml_gained = barrel.ml_per_barrel * barrel.quantity
-        new_gold = inventory["gold"] - money_spent
-        new_ml = inventory[f"num_{color}_ml"] + ml_gained
-        update_command = f"UPDATE global_inventory SET gold = {new_gold}, num_{color}_ml = {new_ml} WHERE id = 1"
-        db.execute(update_command)
-
+        query = text(
+            "UPDATE fluids SET quantity = quantity + :ml_gained WHERE color = :color",
+        )
+        db.execute_with_binds(query, {"ml_gained": ml_gained, "color": color})
     return "OK"
 
 
 def balance_barrels(catalog):
     # goal is to keep a balance of potion types
 
-    inventory = db.get_global_inventory()
-    # getting a count of how many potions we have
-    colors = ["red", "green", "blue"]
-    colors = list(
-        filter(lambda color: f"SMALL_{color.upper()}_BARREL" in catalog, colors)
-    )
-    potion_counts = {color: inventory[f"num_{color}_potions"] for color in colors}
-    fluid_counts = {color: inventory[f"num_{color}_ml"] for color in colors}
-
-    # if we have have 350ml of red fluid, we might as well have 3.5 red potions
-    for color, num_ml in fluid_counts.items():
-        potion_counts[color] += num_ml / 100
-
-    # buying the potion we have the least of till we're out of money
+    fluid_counts = db.get_net_fluid_counts()
     i = 0
-    gold = inventory["gold"]
+    gold = db.get_gold()
     purchase_plan = {}
+    print(fluid_counts)
 
-    while i < len(colors):
+    # buying the most of the potion we have the least of till we're out of money
+
+    while i < len(potionUtils.colors):
         if i == 0:  # recomputing the order when we reset
-            buying_order = sorted(colors, key=lambda color: potion_counts[color])
+            buying_order = sorted(
+                potionUtils.colors, key=lambda color: fluid_counts[color]
+            )
         color_to_buy = buying_order[i]
-        sku = f"SMALL_{color_to_buy.upper()}_BARREL"
-        barrel = catalog[sku]
-        can_afford = gold >= barrel.price
-        if can_afford:
-            # adding to purchase plan
-            potion_counts[color_to_buy] += barrel.ml_per_barrel / 100
-            purchase_plan[sku] = purchase_plan.get(sku, 0) + 1
-            gold -= barrel.price
-            i = 0
-        else:
-            i += 1
+        for size in reversed(sizes):
+            sku = f"{size}_{color_to_buy.upper()}_BARREL"
+            if sku not in catalog:
+                continue
+            barrel = catalog[sku]
+            can_afford = gold >= barrel.price
+            current_amount = purchase_plan.get(sku, 0)
+            any_barrels_left = current_amount < barrel.quantity
+            if can_afford and any_barrels_left:
+                # adding to purchase plan
+                fluid_counts[color_to_buy] += barrel.ml_per_barrel
+                purchase_plan[sku] = current_amount + 1
+                gold -= barrel.price
+                i = 0
+                break
+        i += 1
 
-    # getting a return value
     return purchase_plan
 
 
-sizes = ["MINI", "SMALL", "MEDIUM", "LARGE"]
-sizes_to_buy = ["MINI", "SMALL"]
-
-
 def one_of_each(catalog):
+    # NOTE: probably outdated lol
     # buying the smallest amount of a each color we don't have that's for sale
-    inventory = db.get_global_inventory()
+    inventory = db.get_gold()
     gold = inventory["gold"]
-    potion_counts = db.get_net_potion_counts()
+    potion_counts = db.get_net_fluid_counts()
     purchase_plan = {}
-    for color in colors.colors:
+    for color in potionUtils.colors:
         if potion_counts[color] > 0:
             continue
         for size in sizes_to_buy:
@@ -118,17 +117,13 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
 
     print(wholesale_catalog)
     # printing the dict version of this for testing later down the road
-    for barrel in wholesale_catalog:
-        json_string = json.dumps(barrel.__dict__)
-        print(json_string)
-
     catalog = {barrel.sku: barrel for barrel in wholesale_catalog}
     ans = []
     purchase_plan = balance_barrels(catalog)
     print(purchase_plan)
     for sku, count in purchase_plan.items():
         barrel = catalog[sku]
-        print(f"purchasing {sku} at {barrel.price}")
+        print(f"purchasing {count} of {sku} for {count * barrel.price}")
         ans.append(
             {
                 "sku": sku,
