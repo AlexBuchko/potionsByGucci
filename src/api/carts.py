@@ -77,9 +77,10 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
         SELECT
             CASE WHEN exists 
             (
-            SELECT * from
-            potions join cart_contents on potions.potion_id = cart_contents.potion_id
-            WHERE cart_contents.cart_id = :cart_id AND potions.quantity < cart_contents.quantity
+            SELECT * FROM cart_contents left join 
+                (SELECT potion_id, sum(change) as inventory FROM potions_ledger GROUP BY potion_id) ledger
+                ON cart_contents.potion_id = ledger.potion_id
+                WHERE cart_id = :cart_id AND cart_contents.amount > ledger.inventory
             )
             THEN 'TRUE'
             ELSE 'FALSE'
@@ -94,7 +95,7 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
     # getting gold paid
     query = text(
         """
-        SELECT sum(cart_contents.quantity * potions.price) 
+        SELECT sum(cart_contents.amount * potions.price) 
         FROM cart_contents JOIN potions ON cart_contents.potion_id = potions.potion_id 
         WHERE cart_contents.cart_id = :cart_id
         """
@@ -102,69 +103,27 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
     gold_paid = db.execute_with_binds(query, {"cart_id": cart_id}).scalar_one()
 
     # updating gold
-    query = text("UPDATE global_inventory SET gold = gold + :gold_gained")
+    query = text("INSERT INTO gold_ledger (change) VALUES (:gold_gained)")
     db.execute_with_binds(query, {"gold_gained": gold_paid})
 
     # getting sum of potions bought
     query = text(
-        "select SUM(quantity) FROM cart_contents WHERE cart_contents.cart_id = :cart_id"
+        "select SUM(amount) FROM cart_contents WHERE cart_contents.cart_id = :cart_id"
     )
     num_potions_bought = db.execute_with_binds(query, {"cart_id": cart_id}).scalar_one()
+
     # updating potion inventory
     query = text(
         """
-        UPDATE potions
-        SET quantity = potions.quantity - cart_contents.quantity
+        INSERT INTO potions_ledger (potion_id, change)
+        SELECT cart_contents.potion_id, -1 * cart_contents.amount
         FROM cart_contents
-        WHERE cart_contents.potion_id = potions.potion_id and cart_id = :cart_id
-        """
+        WHERE cart_id = :cart_id       
+    """
     )
     db.execute_with_binds(query, {"cart_id": cart_id})
 
     return {
         "total_potions_bought": num_potions_bought,
-        "total_gold_paid": gold_paid,
-    }
-
-    POTION_PRICE = 1
-    TABLE_NAME = "global_inventory"
-    cart = carts[cart_id]
-    inventory = db.get_gold()
-
-    gold_count = inventory["gold"]
-    potions_bought = 0
-    gold_paid = 0
-    print(cart)
-    for sku, quantity in cart.items():
-        print("iter 1", sku, quantity)
-        color = sku.split("_")[0].lower()
-
-        potion_count = inventory[f"num_{color}_potions"]
-
-        if quantity > potion_count:
-            print(
-                f"ordered {quantity} {color} potions but we only have {potion_count} in stock"
-            )
-            continue
-
-        revenue = POTION_PRICE * quantity
-        gold_count += revenue
-        potion_count -= quantity
-
-        # logic to update database
-        update_command = (
-            f"UPDATE {TABLE_NAME} SET num_{color}_potions = {potion_count} WHERE id = 1"
-        )
-        db.execute_with_binds(update_command)
-
-        gold_paid += revenue
-        potions_bought += quantity
-
-    update_command = f"UPDATE {TABLE_NAME} SET gold = {gold_count} WHERE id = 1"
-    db.execute_with_binds(update_command)
-    del carts[cart_id]
-
-    return {
-        "total_potions_bought": potions_bought,
         "total_gold_paid": gold_paid,
     }

@@ -37,29 +37,33 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]):
 
     for barrel in barrels_delivered:
         # getting color
-        color = potionUtils.get_color_from_barrel_type(barrel.potion_type)
-        gold_spent = barrel.price * barrel.quantity
+        gold_change = -1 * barrel.price * barrel.quantity
+        current_gold = db.get_gold()
+        if current_gold + gold_change < 0:
+            raise "not enough gold to buy barrels"
+
         query = text(
-            "UPDATE global_inventory SET gold = gold - :gold_spent",
+            "INSERT INTO gold_ledger (change) VALUES (:gold_change)",
         )
-        db.execute_with_binds(query, {"gold_spent": gold_spent})
+        db.execute_with_binds(query, {"gold_change": gold_change})
 
         ml_gained = barrel.ml_per_barrel * barrel.quantity
         query = text(
-            "UPDATE fluids SET quantity = quantity + :ml_gained WHERE color = :color",
+            "INSERT INTO fluids_ledger (fluid_id, change) SELECT fluid_id, :ml_gained FROM fluids WHERE fluids.potion_type = :potion_type",
         )
-        db.execute_with_binds(query, {"ml_gained": ml_gained, "color": color})
+        db.execute_with_binds(
+            query, {"ml_gained": ml_gained, "potion_type": barrel.potion_type}
+        )
     return "OK"
 
 
-def balance_barrels(catalog):
+def balance_barrels(catalog, state):
     # goal is to keep a balance of potion types
+    fluid_counts = state.fluid_counts
+    gold = state.gold
 
-    fluid_counts = db.get_net_fluid_counts()
     i = 0
-    gold = db.get_gold()
     purchase_plan = {}
-    print(fluid_counts)
 
     # buying the most of the potion we have the least of till we're out of money
 
@@ -84,30 +88,15 @@ def balance_barrels(catalog):
                 gold -= barrel.price
                 i = 0
                 break
-        i += 1
+        else:
+            i += 1
 
     return purchase_plan
 
 
-def one_of_each(catalog):
-    # NOTE: probably outdated lol
-    # buying the smallest amount of a each color we don't have that's for sale
-    inventory = db.get_gold()
-    gold = inventory["gold"]
-    potion_counts = db.get_net_fluid_counts()
-    purchase_plan = {}
-    for color in potionUtils.colors:
-        if potion_counts[color] > 0:
-            continue
-        for size in sizes_to_buy:
-            sku = f"{size}_{color.upper()}_BARREL"
-            if sku in catalog:
-                barrel = catalog[sku]
-                if barrel.price <= gold:
-                    gold -= barrel.price
-                    purchase_plan[sku] = 1
-                    break
-    return purchase_plan
+class State(BaseModel):
+    fluid_counts: dict
+    gold: int
 
 
 # Gets called once a day
@@ -118,9 +107,12 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     print(wholesale_catalog)
     # printing the dict version of this for testing later down the road
     catalog = {barrel.sku: barrel for barrel in wholesale_catalog}
-    ans = []
-    purchase_plan = balance_barrels(catalog)
+    fluid_counts = db.get_net_fluid_counts()
+    gold = db.get_gold()
+    state = State(fluid_counts=fluid_counts, gold=gold)
+    purchase_plan = balance_barrels(catalog, state)
     print(purchase_plan)
+    ans = []
     for sku, count in purchase_plan.items():
         barrel = catalog[sku]
         print(f"purchasing {count} of {sku} for {count * barrel.price}")

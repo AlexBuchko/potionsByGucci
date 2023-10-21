@@ -19,8 +19,8 @@ def get_inventory():
     gold = db.get_gold()
     query = """
         SELECT
-            (SELECT sum(quantity)::int from potions) as sum_potions,
-            (SELECT sum(quantity)::int from fluids) as sum_fluids
+            (SELECT sum(change)::int from potions_ledger) as sum_potions,
+            (SELECT sum(change)::int from fluids_ledger) as sum_fluids
     """
     [num_potions, num_fluids] = db.execute(text(query)).first()
     return {"number_of_potions": num_potions, "ml_in_barrels": num_fluids, "gold": gold}

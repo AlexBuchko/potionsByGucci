@@ -20,11 +20,12 @@ def reset():
 
     # updating gold
     queries = []
-    queries.append(text("UPDATE global_inventory SET gold = 100"))
+    queries.append(text("TRUNCATE TABLE gold_ledger CASCADE"))
+    queries.append(text("INSERT INTO gold_ledger (change) VALUES (100)"))
     queries.append(text("TRUNCATE TABLE carts CASCADE"))
     queries.append(text("TRUNCATE TABLE cart_contents"))
-    queries.append(text("UPDATE potions SET quantity = 0"))
-    queries.append(text("UPDATE fluids SET quantity = 0"))
+    queries.append(text("TRUNCATE TABLE fluids_ledger"))
+    queries.append(text("TRUNCATE TABLE potions_ledger"))
     for query in queries:
         print(query)
         db.execute(query)
