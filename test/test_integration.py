@@ -22,6 +22,7 @@ from src.api.bottler import (
 )
 from src.api.carts import checkout, CartCheckout
 from src.api.audit import get_inventory
+from src.api.catalog import get_catalog
 
 
 class TestsStateless:
@@ -208,4 +209,32 @@ def test_checkout(test_data):
 def test_audit(test_data):
     result = get_inventory()
     expected = {"gold": 1100, "ml_in_barrels": 900, "number_of_potions": 8}
+    assert result == expected
+
+
+def test_catalog(test_data):
+    result = get_catalog()
+    expected = [
+        {
+            "sku": "green",
+            "name": "green",
+            "price": 50,
+            "potion_type": [0, 100, 0, 0],
+            "quantity": 2,
+        },
+        {
+            "sku": "purple",
+            "name": "purple",
+            "price": 50,
+            "potion_type": [50, 0, 50, 0],
+            "quantity": 5,
+        },
+        {
+            "sku": "red",
+            "name": "red",
+            "price": 50,
+            "potion_type": [100, 0, 0, 0],
+            "quantity": 1,
+        },
+    ]
     assert result == expected
