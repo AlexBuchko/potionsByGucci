@@ -96,6 +96,8 @@ def get_bottle_plan():
 
     query = text("SELECT sum(change) from potions_ledger")
     total_potions = db.execute(query).scalar_one()
+    if not total_potions:
+        total_potions = 0
     fluids = db.get_fluid_counts()
     potions = db.get_potions()
     state = BottlerState(total_potions=total_potions, fluids=fluids, potions=potions)
