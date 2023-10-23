@@ -75,8 +75,8 @@ def test_data():
         """INSERT INTO potions_ledger (potion_id, change) VALUES 
                  (1, 3),
                  (1, -2),
-                 (6, 5),
-                 (3, 2)"""
+                 (5, 5),
+                 (2, 2)"""
     )
     queries.append(
         """
@@ -92,7 +92,7 @@ def test_data():
 
     queries.append("INSERT INTO carts (cart_id, customer_name) VALUES (1, 'Bob')")
     queries.append(
-        "INSERT INTO cart_contents (cart_id, potion_id, amount) VALUES (1, 1, 1), (1, 6, 3)"
+        "INSERT INTO cart_contents (cart_id, potion_id, amount) VALUES (1, 1, 1), (1, 5, 3)"
     )
 
     queries.append("INSERT INTO gold_ledger (change) VALUES (1000)")
@@ -159,9 +159,9 @@ def test_deliver_barrels(test_data):
 def test_brewing_plan(test_data):
     result = get_bottle_plan()
     expected = [
-        {"potion_type": [0, 50, 0, 50], "quantity": 2},
         {"potion_type": [0, 0, 0, 100], "quantity": 2},
         {"potion_type": [50, 0, 0, 50], "quantity": 2},
+        {"potion_type": [0, 50, 0, 50], "quantity": 2},
         {"potion_type": [100, 0, 0, 0], "quantity": 2},
         {"potion_type": [0, 100, 0, 0], "quantity": 1},
     ]
@@ -217,6 +217,13 @@ def test_catalog(test_data):
     result = get_catalog()
     expected = [
         {
+            "sku": "red",
+            "name": "red",
+            "price": 50,
+            "potion_type": [100, 0, 0, 0],
+            "quantity": 1,
+        },
+        {
             "sku": "green",
             "name": "green",
             "price": 50,
@@ -229,13 +236,6 @@ def test_catalog(test_data):
             "price": 50,
             "potion_type": [50, 0, 50, 0],
             "quantity": 5,
-        },
-        {
-            "sku": "red",
-            "name": "red",
-            "price": 50,
-            "potion_type": [100, 0, 0, 0],
-            "quantity": 1,
         },
     ]
     assert result == expected
@@ -337,4 +337,5 @@ def test_empty_barrels():
     ]
 
     result = barrels.get_wholesale_purchase_plan(catalog)
-    assert result != result
+    expected = [{"quantity": 1, "sku": "SMALL_RED_BARREL"}]
+    assert result == expected
