@@ -102,7 +102,7 @@ class State(BaseModel):
 def convert_catalog(barrels: list[Barrel]):
     # converting potions
     for barrel in barrels:
-        barrel.potion_type = [x * 100 for x in barrel.potion_type]
+        barrel.potion_type = [100 if x == 1 else x for x in barrel.potion_type]
     return {barrel.sku: barrel for barrel in barrels}
 
 
