@@ -99,6 +99,13 @@ class State(BaseModel):
     gold: int
 
 
+def convert_catalog(barrels: list[Barrel]):
+    # converting potions
+    for barrel in barrels:
+        barrel.potion_type = [x * 100 for x in barrel.potion_type]
+    return {barrel.sku: barrel for barrel in barrels}
+
+
 # Gets called once a day
 @router.post("/plan")
 def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
@@ -106,7 +113,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
 
     print(wholesale_catalog)
     # printing the dict version of this for testing later down the road
-    catalog = {barrel.sku: barrel for barrel in wholesale_catalog}
+    catalog = convert_catalog(wholesale_catalog)
     fluid_counts = db.get_net_fluid_counts()
     gold = db.get_gold()
     state = State(fluid_counts=fluid_counts, gold=gold)

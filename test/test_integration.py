@@ -11,6 +11,7 @@ from fastapi.security.api_key import APIKeyHeader
 from src.api.server import app
 from src.api.auth import get_api_key
 from src.api import barrels
+from src.api.barrels import Barrel
 from sqlalchemy import text
 from src.api import database as db
 from test.factories import barrel_factory
@@ -238,3 +239,102 @@ def test_catalog(test_data):
         },
     ]
     assert result == expected
+
+
+def test_empty_barrels():
+    catalog = [
+        Barrel(
+            sku="LARGE_RED_BARREL",
+            ml_per_barrel=10000,
+            potion_type=[1, 0, 0, 0],
+            price=500,
+            quantity=30,
+        ),
+        Barrel(
+            sku="MEDIUM_RED_BARREL",
+            ml_per_barrel=2500,
+            potion_type=[1, 0, 0, 0],
+            price=250,
+            quantity=10,
+        ),
+        Barrel(
+            sku="SMALL_RED_BARREL",
+            ml_per_barrel=500,
+            potion_type=[1, 0, 0, 0],
+            price=100,
+            quantity=10,
+        ),
+        Barrel(
+            sku="LARGE_GREEN_BARREL",
+            ml_per_barrel=10000,
+            potion_type=[0, 1, 0, 0],
+            price=400,
+            quantity=30,
+        ),
+        Barrel(
+            sku="MEDIUM_GREEN_BARREL",
+            ml_per_barrel=2500,
+            potion_type=[0, 1, 0, 0],
+            price=250,
+            quantity=10,
+        ),
+        Barrel(
+            sku="SMALL_GREEN_BARREL",
+            ml_per_barrel=500,
+            potion_type=[0, 1, 0, 0],
+            price=100,
+            quantity=10,
+        ),
+        Barrel(
+            sku="LARGE_BLUE_BARREL",
+            ml_per_barrel=10000,
+            potion_type=[0, 0, 1, 0],
+            price=600,
+            quantity=30,
+        ),
+        Barrel(
+            sku="MEDIUM_BLUE_BARREL",
+            ml_per_barrel=2500,
+            potion_type=[0, 0, 1, 0],
+            price=300,
+            quantity=10,
+        ),
+        Barrel(
+            sku="SMALL_BLUE_BARREL",
+            ml_per_barrel=500,
+            potion_type=[0, 0, 1, 0],
+            price=120,
+            quantity=10,
+        ),
+        Barrel(
+            sku="LARGE_DARK_BARREL",
+            ml_per_barrel=10000,
+            potion_type=[0, 0, 0, 1],
+            price=750,
+            quantity=10,
+        ),
+        Barrel(
+            sku="MINI_RED_BARREL",
+            ml_per_barrel=200,
+            potion_type=[1, 0, 0, 0],
+            price=60,
+            quantity=1,
+        ),
+        Barrel(
+            sku="MINI_GREEN_BARREL",
+            ml_per_barrel=200,
+            potion_type=[0, 1, 0, 0],
+            price=60,
+            quantity=1,
+        ),
+        Barrel(
+            sku="MINI_BLUE_BARREL",
+            ml_per_barrel=200,
+            potion_type=[0, 0, 1, 0],
+            price=60,
+            quantity=1,
+        ),
+    ]
+
+    result = barrels.get_wholesale_purchase_plan(catalog)
+    assert result != result
