@@ -30,12 +30,13 @@ sizes = ["MINI", "SMALL", "MEDIUM", "LARGE"]
 def post_deliver_barrels(barrels_delivered: list[Barrel]):
     """ """
     print(barrels_delivered)
+    barrels = convert_catalog(barrels_delivered)
     # printing the dict version of this for testing later down the road
-    for barrel in barrels_delivered:
+    for barrel in barrels.values():
         json_string = json.dumps(barrel.__dict__)
         print(json_string)
 
-    for barrel in barrels_delivered:
+    for barrel in barrels.values():
         # getting color
         gold_change = -1 * barrel.price * barrel.quantity
         current_gold = db.get_gold()

@@ -136,6 +136,7 @@ def test_deliver_barrels(test_data):
                 "quantity": 1,
                 "ml_per_barrel": 500,
                 "price": 50,
+                "sku": "small_red",
             },
         ),
         barrel_factory(
@@ -144,6 +145,7 @@ def test_deliver_barrels(test_data):
                 "ml_per_barrel": 300,
                 "quantity": 3,
                 "price": 100,
+                "sku": "small_blue",
             }
         ),
     ]
