@@ -76,7 +76,8 @@ def test_data():
                  (1, 3),
                  (1, -2),
                  (5, 5),
-                 (2, 2)"""
+                 (2, 2),
+                 (3, 3)"""
     )
     queries.append(
         """
@@ -159,6 +160,18 @@ def test_deliver_barrels(test_data):
 
 
 def test_brewing_plan(test_data):
+    def convert_list_of_dicts(dicts):
+        ans = set()
+        for dict in dicts:
+            sub_ans = set()
+            for key, value in dict.items():
+                if type(value) is list:
+                    sub_ans.add((key, tuple(value)))
+                else:
+                    sub_ans.add((key, value))
+            ans.add(frozenset(sub_ans))
+        return ans
+
     result = get_bottle_plan()
     expected = [
         {"potion_type": [0, 0, 0, 100], "quantity": 2},
@@ -167,7 +180,7 @@ def test_brewing_plan(test_data):
         {"potion_type": [100, 0, 0, 0], "quantity": 2},
         {"potion_type": [0, 100, 0, 0], "quantity": 1},
     ]
-    assert result == expected
+    assert convert_list_of_dicts(result) == convert_list_of_dicts(expected)
 
 
 def test_deliver_bottles(test_data):

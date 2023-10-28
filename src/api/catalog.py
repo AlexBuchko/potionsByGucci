@@ -16,6 +16,7 @@ def get_catalog():
          SELECT potions.potion_id, potion_type, sku, price, amount FROM potions JOIN 
             (SELECT potion_id, sum(change) as amount FROM potions_ledger GROUP BY potion_id) ledger 
             on ledger.potion_id = potions.potion_id
+            WHERE amount > 0
         """
     )
 
