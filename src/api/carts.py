@@ -27,9 +27,7 @@ def create_cart(new_cart: NewCart):
 
 @router.get("/{cart_id}")
 def get_cart(cart_id: int):
-    query = text(
-        "SELECT potion_id, quantity from cart_contents WHERE cart_id = :cart_id"
-    )
+    query = text("SELECT potion_id, amount from cart_contents WHERE cart_id = :cart_id")
     result = db.execute_with_binds(query, {"cart_id": cart_id})
     result = result.fetchall()
     result = [row._asdict() for row in result]
