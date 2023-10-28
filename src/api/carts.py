@@ -47,7 +47,7 @@ def set_item_quantity(cart_id: int, item_sku: str, cart_item: CartItem):
         # getting potion ID from sku
         query = text(
             """
-            INSERT INTO cart_contents (cart_id, potion_id, quantity)
+            INSERT INTO cart_contents (cart_id, potion_id, amount)
             SELECT  :cart_id, potions.potion_id, :quantity
             FROM potions WHERE potions.sku = :item_sku
             """

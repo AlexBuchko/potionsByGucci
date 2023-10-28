@@ -21,7 +21,7 @@ from src.api.bottler import (
     get_bottle_plan,
     post_deliver_bottles,
 )
-from src.api.carts import checkout, CartCheckout
+from src.api.carts import checkout, CartCheckout, set_item_quantity, CartItem
 from src.api.audit import get_inventory
 from src.api.catalog import get_catalog
 
@@ -341,3 +341,11 @@ def test_empty_barrels():
     result = barrels.get_wholesale_purchase_plan(catalog)
     expected = [{"quantity": 1, "sku": "SMALL_RED_BARREL"}]
     assert result == expected
+
+
+def test_add_to_cart(test_data):
+    set_item_quantity(1, "green", CartItem(quantity=2))
+    # getting the cart's concent
+    query = text("SELECT amount from cart_contents WHERE cart_id=1 AND potion_id = 2")
+    result = db.execute(query).scalar_one()
+    assert result == 2
