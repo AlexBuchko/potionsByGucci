@@ -24,7 +24,7 @@ Retrieves the catalog of items. Each unique item combination should have only a 
         "price": "integer", /* Between 1 and 500 */
         "potion_type": [r, g, b, d] /* r, g, b, d are integers that add up to exactly 100 */
     }
-]
+]   
 ```
 
 ### 1.2. New Cart - `/carts/` (POST)

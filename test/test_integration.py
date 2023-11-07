@@ -21,9 +21,22 @@ from src.api.bottler import (
     get_bottle_plan,
     post_deliver_bottles,
 )
-from src.api.carts import checkout, CartCheckout, set_item_quantity, CartItem
+from src.api.carts import checkout, CartCheckout, set_item_quantity, CartItem, get_cart
 from src.api.audit import get_inventory
 from src.api.catalog import get_catalog
+
+
+def convert_list_of_dicts(dicts):
+    ans = set()
+    for dict in dicts:
+        sub_ans = set()
+        for key, value in dict.items():
+            if type(value) is list:
+                sub_ans.add((key, tuple(value)))
+            else:
+                sub_ans.add((key, value))
+        ans.add(frozenset(sub_ans))
+    return ans
 
 
 class TestsStateless:
@@ -160,18 +173,6 @@ def test_deliver_barrels(test_data):
 
 
 def test_brewing_plan(test_data):
-    def convert_list_of_dicts(dicts):
-        ans = set()
-        for dict in dicts:
-            sub_ans = set()
-            for key, value in dict.items():
-                if type(value) is list:
-                    sub_ans.add((key, tuple(value)))
-                else:
-                    sub_ans.add((key, value))
-            ans.add(frozenset(sub_ans))
-        return ans
-
     result = get_bottle_plan()
     expected = [
         {"potion_type": [0, 0, 0, 100], "quantity": 2},
@@ -362,3 +363,9 @@ def test_add_to_cart(test_data):
     query = text("SELECT amount from cart_contents WHERE cart_id=1 AND potion_id = 2")
     result = db.execute(query).scalar_one()
     assert result == 2
+
+
+def test_get_cart(test_data):
+    result = get_cart(1)
+    expected = [{"potion_id": 1, "amount": 1}, {"potion_id": 5, "amount": 3}]
+    assert convert_list_of_dicts(result) == convert_list_of_dicts(expected)

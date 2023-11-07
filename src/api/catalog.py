@@ -31,4 +31,4 @@ def get_catalog():
         }
         for row in result
     ]
-    return ans
+    return ans[:6]
